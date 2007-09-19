@@ -1,10 +1,11 @@
 %define	major 3
 %define	libname %mklibname gdbm %{major}
+%define	develname %mklibname gdbm -d
 
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.8.3
-Release:	%mkrel 4
+Release:	%mkrel 5
 License:	GPL
 Group:		System/Libraries
 URL:		http://www.gnu.org/software/gdbm/
@@ -13,10 +14,6 @@ Source0:	ftp://ftp.gnu.org/pub/gnu/gdbm/%{name}-%{version}.tar.bz2
 Patch0:		gdbm-1.8.0-jbj.patch
 # (deush) regenerate patch to apply with -p1
 Patch1:		gdbm-1.8.3-asnonroot.patch
-# (deush comment) coming soon ..
-#Patch2:	gdbm-1.8.0-fixinfo.patch.bz2
-# (gb) use standard configure macros in Makefile.in
-#Patch3:	gdbm-1.8.0-std-configure-macros.patch.bz2
 Buildrequires:	texinfo autoconf2.5 automake1.7
 Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
@@ -33,26 +30,27 @@ routines, you should install gdbm.  You'll also need to install gdbm-devel.
 %package -n	%{libname}
 Summary:	Main library for gdbm
 Group:		System/Libraries
-Obsoletes:	%{name} libgdbm1
-Provides:	libgdbm1
 Provides:	%{name} = %{version}-%{release}
+Obsoletes:	%{name}
 
 %description -n	%{libname}
 This package provides library needed to run programs dynamically linked
 with gdbm.
 
-%package -n	%{libname}-devel
+%package -n	%{develname}
 Summary:	Development libraries and header files for the gdbm library
 Group:		Development/Databases
 Requires:	%{libname} = %{version}
 Requires(post):	info-install
 Requires(preun):	info-install
-Obsoletes:	%{name}-devel libgdbm1-devel
-Provides:	%{name}-devel libgdbm1-devel
-Provides:	lib%{name}-devel
-Conflicts:	%{mklibname gdbm 2}-devel
+Provides:	%{name}-devel = %{version}-%{release}
+Provides:	lib%{name}-devel = %{version}-%{release}
+Conflicts:	%{mklibname gdbm 2 -d}
+Obsoletes:	%{name}-devel
+Obsoletes:	%{mklibname gdbm 1 -d}
+Obsoletes:	%{mklibname gdbm 3 -d}
 
-%description -n	%{libname}-devel
+%description -n	%{develname}
 Gdbm-devel contains the development libraries and header files
 for gdbm, the GNU database system.  These libraries and header files are
 necessary if you plan to do development using the gdbm database.
@@ -65,8 +63,6 @@ gdbm database library.  You'll also need to install the gdbm package.
 %setup -q
 %patch0 -p1 -b .jbj
 %patch1 -p1
-#%patch2 -p1
-#%patch3 -p1 -b .std-configure-macros
 
 libtoolize -f
 aclocal-1.7
@@ -87,13 +83,13 @@ chmod 644  COPYING INSTALL NEWS README
 
 %post -n %{libname} -p /sbin/ldconfig
 
-%post -n %{libname}-devel
+%post -n %{develname}
 %_install_info gdbm.info
 #--entry="* gdbm: (gdbm).                   The GNU Database."
 
 %postun -n %{libname} -p /sbin/ldconfig
 
-%preun -n %{libname}-devel
+%preun -n %{develname}
 %_remove_install_info gdbm.info
 
 %clean
@@ -104,7 +100,7 @@ rm -rf %{buildroot}
 %doc NEWS README
 %{_libdir}/libgdbm*.so.*
 
-%files -n %{libname}-devel
+%files -n %{develname}
 %defattr(-,root,root)
 %{_libdir}/libgdbm*.so
 %{_libdir}/libgdbm*.la
@@ -114,5 +110,3 @@ rm -rf %{buildroot}
 %{_includedir}/gdbm.h
 %{_infodir}/gdbm*
 %{_mandir}/man3/*
-
-
