@@ -15,6 +15,7 @@ Patch0:		gdbm-1.8.0-jbj.patch
 # (deush) regenerate patch to apply with -p1
 Patch1:		gdbm-1.8.3-asnonroot.patch
 Buildrequires:	texinfo autoconf2.5 automake1.7
+Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
 Gdbm is a GNU database indexing library, including routines
