@@ -81,13 +81,17 @@ ln -sf gdbm/gdbm.h %{buildroot}%{_includedir}/gdbm.h
 
 chmod 644  COPYING INSTALL NEWS README
 
+%if %mdkversion < 200900
 %post -n %{libname} -p /sbin/ldconfig
+%endif
 
 %post -n %{develname}
 %_install_info gdbm.info
 #--entry="* gdbm: (gdbm).                   The GNU Database."
 
+%if %mdkversion < 200900
 %postun -n %{libname} -p /sbin/ldconfig
+%endif
 
 %preun -n %{develname}
 %_remove_install_info gdbm.info
