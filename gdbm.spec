@@ -5,7 +5,7 @@
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.8.3
-Release:	%mkrel 8
+Release:	%mkrel 9
 License:	GPL
 Group:		System/Libraries
 URL:		http://www.gnu.org/software/gdbm/
@@ -14,6 +14,7 @@ Source0:	ftp://ftp.gnu.org/pub/gnu/gdbm/%{name}-%{version}.tar.bz2
 Patch0:		gdbm-1.8.0-jbj.patch
 # (deush) regenerate patch to apply with -p1
 Patch1:		gdbm-1.8.3-asnonroot.patch
+Patch2:		gdbm-1.8.3-symbol_resolve_fix.diff
 Buildrequires:	texinfo autoconf2.5 automake1.7
 Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
@@ -63,6 +64,7 @@ gdbm database library.  You'll also need to install the gdbm package.
 %setup -q
 %patch0 -p1 -b .jbj
 %patch1 -p1
+%patch2 -p0
 
 libtoolize -f
 aclocal-1.7
