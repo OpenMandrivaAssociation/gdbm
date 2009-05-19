@@ -16,6 +16,7 @@ Patch0:		gdbm-1.8.0-jbj.patch
 Patch1:		gdbm-1.8.3-asnonroot.patch
 Patch2:		gdbm-1.8.3-symbol_resolve_fix.diff
 Patch3:		gdbm-1.8.3-LDFLAGS.diff
+Patch4:		gdbm_vs_libtool.patch
 Buildrequires:	texinfo autoconf2.5 automake1.7
 Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
@@ -67,6 +68,7 @@ gdbm database library.  You'll also need to install the gdbm package.
 %patch1 -p1
 %patch2 -p0
 %patch3 -p0 -b .LDFLAGS
+%patch4 -p1 -b .libtool
 
 libtoolize -f
 aclocal-1.7
