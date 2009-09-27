@@ -5,7 +5,7 @@
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.8.3
-Release:	%mkrel 11
+Release:	%mkrel 12
 License:	GPL
 Group:		System/Libraries
 URL:		http://www.gnu.org/software/gdbm/
@@ -48,6 +48,9 @@ Requires(post):	info-install
 Requires(preun):	info-install
 Provides:	%{name}-devel = %{version}-%{release}
 Provides:	lib%{name}-devel = %{version}-%{release}
+# (anssi) biarch compat conflict (FIXME: this should be fixed more generally,
+# maybe by adding a hack in perl-URPM):
+Conflicts:	%{name}-devel < %{version}-%{release}
 Conflicts:	%{mklibname gdbm 2 -d}
 Obsoletes:	%{name}-devel
 Obsoletes:	%{mklibname gdbm 1 -d}
