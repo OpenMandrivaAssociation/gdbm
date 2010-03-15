@@ -5,7 +5,7 @@
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.8.3
-Release:	%mkrel 12
+Release:	%mkrel 13
 License:	GPL
 Group:		System/Libraries
 URL:		http://www.gnu.org/software/gdbm/
