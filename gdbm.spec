@@ -5,7 +5,7 @@
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.8.3
-Release:	%mkrel 14
+Release:	%mkrel 15
 License:	GPL
 Group:		System/Libraries
 URL:		http://www.gnu.org/software/gdbm/
@@ -17,7 +17,7 @@ Patch1:		gdbm-1.8.3-asnonroot.patch
 Patch2:		gdbm-1.8.3-symbol_resolve_fix.diff
 Patch3:		gdbm-1.8.3-LDFLAGS.diff
 Patch4:		gdbm_vs_libtool.patch
-Buildrequires:	texinfo autoconf2.5 automake1.7
+Buildrequires:	texinfo autoconf2.5 automake
 Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
@@ -74,7 +74,7 @@ gdbm database library.  You'll also need to install the gdbm package.
 %patch4 -p1 -b .libtool
 
 libtoolize -f
-aclocal-1.7
+aclocal
 FORCE_AUTOCONF_2_5=1 autoconf
 autoheader
 
