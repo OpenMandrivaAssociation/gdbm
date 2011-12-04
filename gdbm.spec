@@ -5,7 +5,7 @@
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.8.3
-Release:	%mkrel 16
+Release:	17
 License:	GPL
 Group:		System/Libraries
 URL:		http://www.gnu.org/software/gdbm/
@@ -17,8 +17,7 @@ Patch1:		gdbm-1.8.3-asnonroot.patch
 Patch2:		gdbm-1.8.3-symbol_resolve_fix.diff
 Patch3:		gdbm-1.8.3-LDFLAGS.diff
 Patch4:		gdbm_vs_libtool.patch
-Buildrequires:	texinfo autoconf2.5 automake
-Buildroot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
+Buildrequires:	texinfo autoconf automake libtool
 
 %description
 Gdbm is a GNU database indexing library, including routines
@@ -43,7 +42,7 @@ with gdbm.
 %package -n	%{develname}
 Summary:	Development libraries and header files for the gdbm library
 Group:		Development/Databases
-Requires:	%{libname} = %{version}
+Requires:	%{libname} >= %{version}-%{release}
 Requires(post):	info-install
 Requires(preun):	info-install
 Provides:	%{name}-devel = %{version}-%{release}
@@ -85,39 +84,28 @@ make all info
 %install
 rm -rf %{buildroot}
 
-%{makeinstall} install-compat includedir=%{buildroot}%{_includedir}/gdbm man3dir=%{buildroot}%{_mandir}/man3
+%makeinstall install-compat includedir=%{buildroot}%{_includedir}/gdbm man3dir=%{buildroot}%{_mandir}/man3
 ln -sf gdbm/gdbm.h %{buildroot}%{_includedir}/gdbm.h
 
 chmod 644  COPYING INSTALL NEWS README
 
-%if %mdkversion < 200900
-%post -n %{libname} -p /sbin/ldconfig
-%endif
+# cleanup
+rm -f %{buildroot}%{_libdir}/*.*a
 
 %post -n %{develname}
 %_install_info gdbm.info
 #--entry="* gdbm: (gdbm).                   The GNU Database."
 
-%if %mdkversion < 200900
-%postun -n %{libname} -p /sbin/ldconfig
-%endif
-
 %preun -n %{develname}
 %_remove_install_info gdbm.info
 
-%clean
-rm -rf %{buildroot}
 
 %files -n %{libname}
-%defattr(-,root,root)
 %doc NEWS README
 %{_libdir}/libgdbm*.so.*
 
 %files -n %{develname}
-%defattr(-,root,root)
 %{_libdir}/libgdbm*.so
-%{_libdir}/libgdbm*.la
-%{_libdir}/libgdbm*.a
 %dir %{_includedir}/gdbm
 %{_includedir}/gdbm/*.h
 %{_includedir}/gdbm.h
