@@ -1,22 +1,16 @@
-%define	major 3
+%define	major 4
 %define	libname %mklibname gdbm %{major}
 %define	develname %mklibname gdbm -d
 
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
-Version:	1.8.3
-Release:	17
+Version:	1.10
+Release:	1
 License:	GPL
 Group:		System/Libraries
 URL:		http://www.gnu.org/software/gdbm/
-Source0:	ftp://ftp.gnu.org/pub/gnu/gdbm/%{name}-%{version}.tar.bz2
-# (deush comment) coming soon.. 
-Patch0:		gdbm-1.8.0-jbj.patch
-# (deush) regenerate patch to apply with -p1
-Patch1:		gdbm-1.8.3-asnonroot.patch
-Patch2:		gdbm-1.8.3-symbol_resolve_fix.diff
-Patch3:		gdbm-1.8.3-LDFLAGS.diff
-Patch4:		gdbm_vs_libtool.patch
+Source0:	ftp://ftp.gnu.org/pub/gnu/gdbm/%{name}-%{version}.tar.gz
+Patch0:		gdbm-1.10-zeroheaders.patch
 Buildrequires:	texinfo autoconf automake libtool
 
 %description
@@ -64,41 +58,36 @@ Install gdbm-devel if you are developing C programs which will use the
 gdbm database library.  You'll also need to install the gdbm package.
 
 %prep
-
 %setup -q
-%patch0 -p1 -b .jbj
-%patch1 -p1
-%patch2 -p0
-%patch3 -p0 -b .LDFLAGS
-%patch4 -p1 -b .libtool
-
-libtoolize -f
-aclocal
-FORCE_AUTOCONF_2_5=1 autoconf
-autoheader
+%patch0 -p1 -b .zeroheaders
 
 %build
-%configure
-make all info
+%configure2_5x --disable-static --enable-libgdbm-compat --enable-largefile
+%make
 
 %install
 rm -rf %{buildroot}
 
-%makeinstall install-compat includedir=%{buildroot}%{_includedir}/gdbm man3dir=%{buildroot}%{_mandir}/man3
-ln -sf gdbm/gdbm.h %{buildroot}%{_includedir}/gdbm.h
+%makeinstall_std
+%find_lang %{name}
 
-chmod 644  COPYING INSTALL NEWS README
+# create symlinks for compatibility
+mkdir -p %{buildroot}/%{_includedir}/gdbm
+ln -sf ../gdbm.h %{buildroot}/%{_includedir}/gdbm/gdbm.h
+ln -sf ../ndbm.h %{buildroot}/%{_includedir}/gdbm/ndbm.h
+ln -sf ../dbm.h %{buildroot}/%{_includedir}/gdbm/dbm.h
 
 # cleanup
-rm -f %{buildroot}%{_libdir}/*.*a
+rm -f %{buildroot}%{_libdir}/*.la
 
 %post -n %{develname}
 %_install_info gdbm.info
-#--entry="* gdbm: (gdbm).                   The GNU Database."
 
 %preun -n %{develname}
 %_remove_install_info gdbm.info
 
+%files -f %{name}.lang
+%{_bindir}/*
 
 %files -n %{libname}
 %doc NEWS README
@@ -108,6 +97,6 @@ rm -f %{buildroot}%{_libdir}/*.*a
 %{_libdir}/libgdbm*.so
 %dir %{_includedir}/gdbm
 %{_includedir}/gdbm/*.h
-%{_includedir}/gdbm.h
+%{_includedir}/*.h
 %{_infodir}/gdbm*
 %{_mandir}/man3/*
