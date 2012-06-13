@@ -5,7 +5,7 @@
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.10
-Release:	1
+Release:	2
 License:	GPL
 Group:		System/Libraries
 URL:		http://www.gnu.org/software/gdbm/
@@ -37,8 +37,6 @@ with gdbm.
 Summary:	Development libraries and header files for the gdbm library
 Group:		Development/Databases
 Requires:	%{libname} >= %{version}-%{release}
-Requires(post):	info-install
-Requires(preun):	info-install
 Provides:	%{name}-devel = %{version}-%{release}
 Provides:	lib%{name}-devel = %{version}-%{release}
 # (anssi) biarch compat conflict (FIXME: this should be fixed more generally,
@@ -76,15 +74,6 @@ mkdir -p %{buildroot}/%{_includedir}/gdbm
 ln -sf ../gdbm.h %{buildroot}/%{_includedir}/gdbm/gdbm.h
 ln -sf ../ndbm.h %{buildroot}/%{_includedir}/gdbm/ndbm.h
 ln -sf ../dbm.h %{buildroot}/%{_includedir}/gdbm/dbm.h
-
-# cleanup
-rm -f %{buildroot}%{_libdir}/*.la
-
-%post -n %{develname}
-%_install_info gdbm.info
-
-%preun -n %{develname}
-%_remove_install_info gdbm.info
 
 %files -f %{name}.lang
 %{_bindir}/*
