@@ -11,6 +11,7 @@ Group:		System/Libraries
 URL:		http://www.gnu.org/software/gdbm/
 Source0:	ftp://ftp.gnu.org/pub/gnu/gdbm/%{name}-%{version}.tar.gz
 Patch0:		gdbm-1.10-zeroheaders.patch
+Patch1:		gdbm-aarch64.patch
 Buildrequires:	texinfo autoconf automake libtool
 
 %description
@@ -58,6 +59,7 @@ gdbm database library.  You'll also need to install the gdbm package.
 %prep
 %setup -q
 %patch0 -p1 -b .zeroheaders
+%patch1 -p1 -b .aarch64
 
 %build
 %configure2_5x --disable-static --enable-libgdbm-compat --enable-largefile
