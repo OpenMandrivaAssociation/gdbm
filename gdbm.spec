@@ -1,12 +1,15 @@
-%define	major	4
+%define	major 4
 %define	libname %mklibname gdbm %{major}
 %define	libcompat %mklibname gdbm_compat %{major}
 %define	devname %mklibname gdbm -d
 
+# (tpg) optimize it a bit
+%global optflags %optflags -O3
+
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
-Version:	1.11
-Release:	8
+Version:	1.12
+Release:	1
 License:	GPLv2
 Group:		System/Libraries
 Url:		http://www.gnu.org/software/gdbm/
@@ -58,7 +61,7 @@ for gdbm, the GNU database system.
 %apply_patches
 
 %build
-%configure2_5x \
+%configure \
 	--disable-static \
 	--enable-libgdbm-compat \
 	--enable-largefile
