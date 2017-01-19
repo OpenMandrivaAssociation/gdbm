@@ -1,4 +1,2 @@
-removed_sources:
-  gdbm-1.10.tar.gz: 441201e9145f590ba613f8a1e952455d620e0860
 sources:
-  gdbm-1.11.tar.gz: ce433d0f192c21d41089458ca5c8294efe9806b4
+  gdbm-1.12.tar.gz: 86513e8871bb376bc014e9e5a2d18a8e0a8ea2f5
