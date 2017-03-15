@@ -8,13 +8,12 @@
 
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
-Version:	1.12
+Version:	1.13
 Release:	1
 License:	GPLv2
 Group:		System/Libraries
 Url:		http://www.gnu.org/software/gdbm/
 Source0:	ftp://ftp.gnu.org/pub/gnu/gdbm/%{name}-%{version}.tar.gz
-Patch0:		gdbm-1.10-zeroheaders.patch
 BuildRequires:	libtool
 BuildRequires:	flex
 BuildRequires:	bison
