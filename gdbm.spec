@@ -8,7 +8,7 @@
 
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
-Version:	1.13
+Version:	1.14
 Release:	1
 License:	GPLv2
 Group:		System/Libraries
