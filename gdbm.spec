@@ -1,10 +1,12 @@
 %define	major 5
+%define compatmajor 4
 %define	libname %mklibname gdbm %{major}
-%define	libcompat %mklibname gdbm_compat %{major}
+%define	libcompat %mklibname gdbm_compat %{compatmajor}
 %define	devname %mklibname gdbm -d
+%define	previouslibname %mklibname gdbm 4
 
 # (tpg) optimize it a bit
-%global optflags %optflags -O3
+%global optflags %optflags -Ofast
 
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
@@ -32,6 +34,13 @@ routines, you should install gdbm.  You'll also need to install gdbm-devel.
 Summary:	Main library for gdbm
 Group:		System/Libraries
 Provides:	%{name} = %{version}-%{release}
+# There doesn't seem to be much of a reason for the soname increase from 4 to 5
+%rename	%{previouslibname}
+%if "%_lib" == "lib64"
+Provides:	libgdbm.so.4()(64bit)
+%else
+Provides:	libgdbm.so.4
+%endif
 
 %description -n	%{libname}
 This package provides library needed to run programs dynamically linked
@@ -78,15 +87,18 @@ ln -sf ../gdbm.h %{buildroot}/%{_includedir}/gdbm/gdbm.h
 ln -sf ../ndbm.h %{buildroot}/%{_includedir}/gdbm/ndbm.h
 ln -sf ../dbm.h %{buildroot}/%{_includedir}/gdbm/dbm.h
 
+ln -s libgdbm.so.%{major} %{buildroot}%{_libdir}/libgdbm.so.4
+
 %files -f %{name}.lang
 %doc NEWS README
 %{_bindir}/*
 
 %files -n %{libname}
 %{_libdir}/libgdbm.so.%{major}*
+%{_libdir}/libgdbm.so.4
 
 %files -n %{libcompat}
-%{_libdir}/libgdbm_compat.so.%{major}*
+%{_libdir}/libgdbm_compat.so.%{compatmajor}*
 
 %files -n %{devname}
 %{_libdir}/libgdbm*.so
