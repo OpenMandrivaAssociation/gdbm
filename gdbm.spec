@@ -1,4 +1,4 @@
-%define	major 4
+%define	major 5
 %define	libname %mklibname gdbm %{major}
 %define	libcompat %mklibname gdbm_compat %{major}
 %define	devname %mklibname gdbm -d
@@ -8,7 +8,7 @@
 
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
-Version:	1.14
+Version:	1.14.1
 Release:	1
 License:	GPLv2
 Group:		System/Libraries
