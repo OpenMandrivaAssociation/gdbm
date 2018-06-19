@@ -1,4 +1,4 @@
-%define	major 5
+%define	major 6
 %define compatmajor 4
 %define	libname %mklibname gdbm %{major}
 %define	libcompat %mklibname gdbm_compat %{compatmajor}
