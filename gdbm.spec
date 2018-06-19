@@ -1,9 +1,9 @@
-%define	major 6
+%define major 6
 %define compatmajor 4
-%define	libname %mklibname gdbm %{major}
-%define	libcompat %mklibname gdbm_compat %{compatmajor}
-%define	devname %mklibname gdbm -d
-%define	previouslibname %mklibname gdbm 4
+%define libname %mklibname gdbm %{major}
+%define libcompat %mklibname gdbm_compat %{compatmajor}
+%define devname %mklibname gdbm -d
+%define previouslibname %mklibname gdbm 4
 
 # (tpg) optimize it a bit
 %global optflags %optflags -Ofast
@@ -11,7 +11,7 @@
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.15
-Release:	1
+Release:	2
 License:	GPLv2
 Group:		System/Libraries
 Url:		http://www.gnu.org/software/gdbm/
@@ -34,6 +34,8 @@ routines, you should install gdbm.  You'll also need to install gdbm-devel.
 Summary:	Main library for gdbm
 Group:		System/Libraries
 Provides:	%{name} = %{version}-%{release}
+Obsoletes:	%{_lib}%{name}5 < 1.15-1
+Conflicts:	%{_lib}%{name}5 < 1.15-1
 # There doesn't seem to be much of a reason for the soname increase from 4 to 5
 %rename	%{previouslibname}
 %if "%_lib" == "lib64"
