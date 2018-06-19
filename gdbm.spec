@@ -3,7 +3,8 @@
 %define libname %mklibname gdbm %{major}
 %define libcompat %mklibname gdbm_compat %{compatmajor}
 %define devname %mklibname gdbm -d
-%define previouslibname %mklibname gdbm 4
+%define previouslibname %mklibname gdbm 5
+%define prepreviouslibname %mklibname gdbm 4
 
 # (tpg) optimize it a bit
 %global optflags %optflags -Ofast
@@ -11,7 +12,7 @@
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.15
-Release:	2
+Release:	3
 License:	GPLv2
 Group:		System/Libraries
 Url:		http://www.gnu.org/software/gdbm/
@@ -37,11 +38,14 @@ Provides:	%{name} = %{version}-%{release}
 Obsoletes:	%{_lib}%{name}5 < 1.15-1
 Conflicts:	%{_lib}%{name}5 < 1.15-1
 # There doesn't seem to be much of a reason for the soname increase from 4 to 5
+%rename	%{prepreviouslibname}
 %rename	%{previouslibname}
 %if "%_lib" == "lib64"
 Provides:	libgdbm.so.4()(64bit)
+Provides:	libgdbm.so.5()(64bit)
 %else
 Provides:	libgdbm.so.4
+Provides:	libgdbm.so.5
 %endif
 
 %description -n	%{libname}
@@ -90,6 +94,7 @@ ln -sf ../ndbm.h %{buildroot}/%{_includedir}/gdbm/ndbm.h
 ln -sf ../dbm.h %{buildroot}/%{_includedir}/gdbm/dbm.h
 
 ln -s libgdbm.so.%{major} %{buildroot}%{_libdir}/libgdbm.so.4
+ln -s libgdbm.so.%{major} %{buildroot}%{_libdir}/libgdbm.so.5
 
 %files -f %{name}.lang
 %doc NEWS README
@@ -98,6 +103,7 @@ ln -s libgdbm.so.%{major} %{buildroot}%{_libdir}/libgdbm.so.4
 %files -n %{libname}
 %{_libdir}/libgdbm.so.%{major}*
 %{_libdir}/libgdbm.so.4
+%{_libdir}/libgdbm.so.5
 
 %files -n %{libcompat}
 %{_libdir}/libgdbm_compat.so.%{compatmajor}*
