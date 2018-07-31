@@ -7,7 +7,7 @@
 %define prepreviouslibname %mklibname gdbm 4
 
 # (tpg) optimize it a bit
-%global optflags %optflags -Ofast
+%global optflags %optflags -Ofast -Wno-return-type
 
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
