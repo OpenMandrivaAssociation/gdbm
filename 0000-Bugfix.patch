@@ -1,0 +1,26 @@
+From 1059526e357da1aa92e5c020332f4b39ceb37503 Mon Sep 17 00:00:00 2001
+From: Sergey Poznyakoff <gray@gnu.org>
+Date: Tue, 31 Jul 2018 10:39:53 +0300
+Subject: [PATCH 0/1] Bugfix
+
+* src/gdbmsync.c (gdbm_sync): Always return a meaningful value
+---
+ src/gdbmsync.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/gdbmsync.c b/src/gdbmsync.c
+index a8d1002..a75952b 100644
+--- a/src/gdbmsync.c
++++ b/src/gdbmsync.c
+@@ -28,7 +28,7 @@ int
+ gdbm_sync (GDBM_FILE dbf)
+ {
+   /* Return immediately if the database needs recovery */	
+-  GDBM_ASSERT_CONSISTENCY (dbf, );
++  GDBM_ASSERT_CONSISTENCY (dbf, -1);
+ 
+   /* Initialize the gdbm_errno variable. */
+   gdbm_set_errno (dbf, GDBM_NO_ERROR, FALSE);
+-- 
+2.8.3
+
