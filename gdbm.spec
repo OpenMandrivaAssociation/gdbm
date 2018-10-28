@@ -11,7 +11,7 @@
 
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
-Version:	1.18
+Version:	1.18.1
 Release:	1
 License:	GPLv2
 Group:		System/Libraries
@@ -31,15 +31,15 @@ applications which will use such a database.
 If you're a C developer and your programs need access to simple database
 routines, you should install gdbm.  You'll also need to install gdbm-devel.
 
-%package -n	%{libname}
+%package -n %{libname}
 Summary:	Main library for gdbm
 Group:		System/Libraries
 Provides:	%{name} = %{version}-%{release}
 Obsoletes:	%{_lib}%{name}5 < 1.15-1
 Conflicts:	%{_lib}%{name}5 < 1.15-1
 # There doesn't seem to be much of a reason for the soname increase from 4 to 5
-%rename	%{prepreviouslibname}
-%rename	%{previouslibname}
+%rename %{prepreviouslibname}
+%rename %{previouslibname}
 %if "%_lib" == "lib64"
 Provides:	libgdbm.so.4()(64bit)
 Provides:	libgdbm.so.5()(64bit)
@@ -48,43 +48,43 @@ Provides:	libgdbm.so.4
 Provides:	libgdbm.so.5
 %endif
 
-%description -n	%{libname}
+%description -n %{libname}
 This package provides library needed to run programs dynamically linked
 with gdbm.
 
-%package -n	%{libcompat}
+%package -n %{libcompat}
 Summary:	Main library for gdbm
 Group:		System/Libraries
 Conflicts:	%{_lib}gdbm4 < 1.10-4
 
-%description -n	%{libcompat}
+%description -n %{libcompat}
 This package provides library needed to run programs dynamically linked
 with gdbm.
 
-%package -n	%{devname}
+%package -n %{devname}
 Summary:	Development libraries and header files for the gdbm library
 Group:		Development/Databases
 Requires:	%{libname} >= %{version}-%{release}
 Requires:	%{libcompat} >= %{version}-%{release}
 Provides:	%{name}-devel = %{version}-%{release}
 
-%description -n	%{devname}
+%description -n %{devname}
 This package contains the development libraries and header files
 for gdbm, the GNU database system.
 
 %prep
-%setup -q
-%apply_patches
+%autosetup -p1
 
 %build
 %configure \
 	--disable-static \
 	--enable-libgdbm-compat \
 	--enable-largefile
-%make
+
+%make_build
 
 %install
-%makeinstall_std
+%make_install
 %find_lang %{name}
 
 # create symlinks for compatibility
