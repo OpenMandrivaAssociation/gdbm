@@ -7,12 +7,12 @@
 %define prepreviouslibname %mklibname gdbm 4
 
 # (tpg) optimize it a bit
-%global optflags %optflags -Ofast -Wno-return-type
+%global optflags %optflags -O3 -Wno-return-type
 
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.18.1
-Release:	2
+Release:	3
 License:	GPLv2
 Group:		System/Libraries
 Url:		http://www.gnu.org/software/gdbm/
