@@ -1,0 +1,298 @@
+From 2ff4ae9c745d4b9e6ee36468c81554027f66c35b Mon Sep 17 00:00:00 2001
+From: Sergey Poznyakoff <gray@gnu.org>
+Date: Fri, 31 Aug 2018 08:26:31 +0000
+Subject: Various bugfixes.
+
+* compat/dbmopen.c (ndbm_open_dir_file0): Ignore ENOENT.
+* src/falloc.c (push_avail_block): Free temporary storage no matter
+what return status.
+* src/gdbm.h.in (GDBM_FILE_TRUNCATE_ERROR): New error code.
+* src/gdbmdump.c (_gdbm_dump_ascii): Initialize rc.
+* src/gdbmerrno.c: Handle new error.code
+* src/gdbmload.c (gdbm_load_bdb_dump): Initialize rc
+* src/gdbmopen.c (_gdbm_ftruncate): New function.
+(gdbm_fd_open): Use _gdbm_ftruncate. Check its return.
+* src/gdbmseq.c (gdbm_firstkey): Initialize dsize
+* src/gdbmtool.c (command_generator): Check if cmd is NULL.
+(shouldn't happen, but anyways).
+* src/mmap.c (_gdbm_mapped_lseek): Check for vailidity of the 'whence'
+parameter.
+* src/systems.h (TRUNCATE): Remove macro.
+* src/util.c (vgetyn): Remove unnecessary assignment.
+---
+diff --git a/compat/dbmopen.c b/compat/dbmopen.c
+index b9e7518..0538992 100644
+--- a/compat/dbmopen.c
++++ b/compat/dbmopen.c
+@@ -87,7 +87,7 @@ ndbm_open_dir_file0 (const char *file_name, int pagfd, int mode)
+ 		  if ((mode & GDBM_OPENMASK) == GDBM_READER)
+ 		    /* Ok, try to cope with it. */
+ 		    return pagfd;
+-		  else
++		  else if (errno != ENOENT)
+ 		    {
+ 		      gdbm_set_errno (NULL, GDBM_FILE_OPEN_ERROR, TRUE); 
+ 		      return -1;
+diff --git a/src/falloc.c b/src/falloc.c
+index 09b40d4..7a94afb 100644
+--- a/src/falloc.c
++++ b/src/falloc.c
+@@ -313,33 +313,43 @@ push_avail_block (GDBM_FILE dbf)
+   /* Update the header avail count to previous size divided by 2. */
+   dbf->header->avail.count >>= 1;
+ 
+-  /* Free the unneeded space. */
+-  new_loc.av_adr += av_size;
+-  new_loc.av_size -= av_size;
+-  _gdbm_free (dbf, new_loc.av_adr, new_loc.av_size);
+-
+-  /* Update the disk. */
+-  file_pos = gdbm_file_seek (dbf, av_adr, SEEK_SET);
+-  if (file_pos != av_adr)
++  rc = 0;
++  do
+     {
+-      GDBM_SET_ERRNO (dbf, GDBM_FILE_SEEK_ERROR, TRUE);
+-      _gdbm_fatal (dbf, _("lseek error"));
+-      return -1;
+-    }
++      /* Free the unneeded space. */
++      new_loc.av_adr += av_size;
++      new_loc.av_size -= av_size;
++      if (_gdbm_free (dbf, new_loc.av_adr, new_loc.av_size))
++	{
++	  rc = -1;
++	  break;
++	}
++  
++      /* Update the disk. */
++      file_pos = gdbm_file_seek (dbf, av_adr, SEEK_SET);
++      if (file_pos != av_adr)
++	{
++	  GDBM_SET_ERRNO (dbf, GDBM_FILE_SEEK_ERROR, TRUE);
++	  _gdbm_fatal (dbf, _("lseek error"));
++	  rc = -1;
++	  break;
++	}
+ 
+-  rc = _gdbm_full_write (dbf, temp, av_size);
+-  if (rc)
+-    {
+-      GDBM_DEBUG (GDBM_DEBUG_STORE|GDBM_DEBUG_ERR,
+-		  "%s: error writing avail data: %s",
+-		  dbf->name, gdbm_db_strerror (dbf));	  
+-      _gdbm_fatal (dbf, gdbm_db_strerror (dbf));
+-      return -1;
++      rc = _gdbm_full_write (dbf, temp, av_size);
++      if (rc)
++	{
++	  GDBM_DEBUG (GDBM_DEBUG_STORE|GDBM_DEBUG_ERR,
++		      "%s: error writing avail data: %s",
++		      dbf->name, gdbm_db_strerror (dbf));	  
++	  _gdbm_fatal (dbf, gdbm_db_strerror (dbf));
++	  rc = -1;
++	}
+     }
+-
++  while (0);
++  
+   free (temp);
+ 
+-  return 0;
++  return rc;
+ }
+ 
+ /* AV_TABLE contains COUNT entries sorted by AV_SIZE in ascending order.
+diff --git a/src/gdbm.h.in b/src/gdbm.h.in
+index 6318ad8..f5eadc5 100644
+--- a/src/gdbm.h.in
++++ b/src/gdbm.h.in
+@@ -227,9 +227,10 @@ extern int gdbm_copy_meta (GDBM_FILE dst, GDBM_FILE src);
+ # define GDBM_BAD_DIR_ENTRY             36
+ # define GDBM_FILE_CLOSE_ERROR          37  
+ # define GDBM_FILE_SYNC_ERROR           38
++# define GDBM_FILE_TRUNCATE_ERROR       39
+   
+ # define _GDBM_MIN_ERRNO	0
+-# define _GDBM_MAX_ERRNO	GDBM_FILE_SYNC_ERROR
++# define _GDBM_MAX_ERRNO	GDBM_FILE_TRUNCATE_ERROR
+ 
+ /* This one was never used and will be removed in the future */
+ # define GDBM_UNKNOWN_UPDATE GDBM_UNKNOWN_ERROR
+diff --git a/src/gdbmdump.c b/src/gdbmdump.c
+index 2e6f5b0..a8c4ec5 100644
+--- a/src/gdbmdump.c
++++ b/src/gdbmdump.c
+@@ -62,7 +62,7 @@ _gdbm_dump_ascii (GDBM_FILE dbf, FILE *fp)
+   size_t count = 0;
+   unsigned char *buffer = NULL;
+   size_t bufsize = 0;
+-  int rc;
++  int rc = 0;
+ 
+   fd = gdbm_fdesc (dbf);
+   if (fstat (fd, &st))
+diff --git a/src/gdbmerrno.c b/src/gdbmerrno.c
+index 4ce7f9d..6758272 100644
+--- a/src/gdbmerrno.c
++++ b/src/gdbmerrno.c
+@@ -138,7 +138,8 @@ const char * const gdbm_errlist[_GDBM_MAX_ERRNO+1] = {
+   [GDBM_BAD_HASH_TABLE]         = N_("Malformed hash table"),
+   [GDBM_BAD_DIR_ENTRY]          = N_("Invalid directory entry"),
+   [GDBM_FILE_CLOSE_ERROR]       = N_("Error closing file"),
+-  [GDBM_FILE_SYNC_ERROR]        = N_("Error synchronizing file")
++  [GDBM_FILE_SYNC_ERROR]        = N_("Error synchronizing file"),
++  [GDBM_FILE_TRUNCATE_ERROR]    = N_("Error truncating file")
+ };
+ 
+ const char *
+@@ -182,7 +183,8 @@ int const gdbm_syserr[_GDBM_MAX_ERRNO+1] = {
+   [GDBM_FILE_STAT_ERROR]        = 1,
+   [GDBM_BACKUP_FAILED]          = 1,
+   [GDBM_FILE_CLOSE_ERROR]       = 1,
+-  [GDBM_FILE_SYNC_ERROR]        = 1
++  [GDBM_FILE_SYNC_ERROR]        = 1,
++  [GDBM_FILE_TRUNCATE_ERROR]    = 1
+ };
+ 
+ /* Returns true if system errno value is meaningful for GDBM error
+diff --git a/src/gdbmload.c b/src/gdbmload.c
+index 008bcb9..f5b7869 100644
+--- a/src/gdbmload.c
++++ b/src/gdbmload.c
+@@ -542,6 +542,7 @@ gdbm_load_bdb_dump (struct dump_file *file, GDBM_FILE dbf, int replace)
+   memset (&xd, 0, sizeof (xd));
+   xs[0] = xs[1] = 0;
+   i = 0;
++  rc = 0;
+   while ((c = fgetc (file->fp)) == ' ')
+     {
+       rc = xdatum_read (file->fp, &xd[i], &xs[i]);
+diff --git a/src/gdbmopen.c b/src/gdbmopen.c
+index 908887c..7ec57e7 100644
+--- a/src/gdbmopen.c
++++ b/src/gdbmopen.c
+@@ -199,6 +199,21 @@ validate_header (gdbm_file_header const *hdr, struct stat const *st)
+   return 0;
+ }
+   
++/* Do we have ftruncate? */
++static inline int
++_gdbm_ftruncate (GDBM_FILE dbf)
++{
++#if HAVE_FTRUNCATE
++  return ftruncate (dbf->desc, 0);
++#else
++  int fd;
++  fd = open (dbf->name, O_RDWR|O_TRUNC, mode);
++  if (fd == -1)
++    return -1;
++  return close (fd);
++#endif
++}
++
+ GDBM_FILE 
+ gdbm_fd_open (int fd, const char *file_name, int block_size,
+ 	      int flags, void (*fatal_func) (const char *))
+@@ -320,14 +335,22 @@ gdbm_fd_open (int fd, const char *file_name, int block_size,
+      now time to truncate the file. */
+   if ((flags & GDBM_OPENMASK) == GDBM_NEWDB && file_stat.st_size != 0)
+     {
+-      TRUNCATE (dbf);
+-      if (fstat (dbf->desc, &file_stat))
++      if (_gdbm_ftruncate (dbf))
++	{
++	  GDBM_SET_ERRNO2 (dbf, GDBM_FILE_TRUNCATE_ERROR, FALSE,
++			   GDBM_DEBUG_OPEN);
++	}
++      else if (fstat (dbf->desc, &file_stat))
++	{
++	  GDBM_SET_ERRNO2 (dbf, GDBM_FILE_STAT_ERROR, FALSE, GDBM_DEBUG_OPEN);
++	}
++
++      if (gdbm_last_errno (dbf))
+ 	{
+ 	  if (flags & GDBM_CLOERROR)
+ 	    close (dbf->desc);
+ 	  free (dbf->name);
+ 	  free (dbf);
+-	  GDBM_SET_ERRNO2 (NULL, GDBM_FILE_STAT_ERROR, FALSE, GDBM_DEBUG_OPEN);
+ 	  return NULL;
+ 	}
+     }
+diff --git a/src/gdbmseq.c b/src/gdbmseq.c
+index e74d78d..ee7ebf3 100644
+--- a/src/gdbmseq.c
++++ b/src/gdbmseq.c
+@@ -101,6 +101,7 @@ gdbm_firstkey (GDBM_FILE dbf)
+ 
+   /* Set the default return value for not finding a first entry. */
+   return_val.dptr = NULL;
++  return_val.dsize = 0;
+ 
+   GDBM_DEBUG (GDBM_DEBUG_READ, "%s: getting first key", dbf->name);
+   
+diff --git a/src/gdbmtool.c b/src/gdbmtool.c
+index 454465e..8c97e1e 100644
+--- a/src/gdbmtool.c
++++ b/src/gdbmtool.c
+@@ -1435,7 +1435,7 @@ command_generator (const char *text, int state)
+       len = strlen (text);
+     }
+ 
+-  if (!cmd->name)
++  if (!cmd || !cmd->name)
+     return NULL;
+ 
+   /* Return the next name which partially matches from the command list. */
+diff --git a/src/mmap.c b/src/mmap.c
+index 48e84ae..148b852 100644
+--- a/src/mmap.c
++++ b/src/mmap.c
+@@ -367,6 +367,10 @@ _gdbm_mapped_lseek (GDBM_FILE dbf, off_t offset, int whence)
+ 	    needle = file_size - offset; 
+ 	    break;
+ 	  }
++
++	default:
++	  errno = EINVAL;
++	  return -1;
+ 	}
+ 
+       if (needle < 0)
+diff --git a/src/systems.h b/src/systems.h
+index 750aa51..f269060 100644
+--- a/src/systems.h
++++ b/src/systems.h
+@@ -52,13 +52,6 @@
+ # define STATBLKSIZE(st) 1024
+ #endif
+ 
+-/* Do we have ftruncate? */
+-#if HAVE_FTRUNCATE
+-# define TRUNCATE(dbf) ftruncate (dbf->desc, 0)
+-#else
+-# define TRUNCATE(dbf) close( open (dbf->name, O_RDWR|O_TRUNC, mode));
+-#endif
+-
+ #ifndef STDERR_FILENO
+ # define STDERR_FILENO 2
+ #endif
+diff --git a/src/util.c b/src/util.c
+index f254202..3493366 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -98,8 +98,9 @@ vgetyn (const char *prompt, va_list ap)
+ 		default:
+ 		  fprintf (stdout, "%s\n", _("Please, reply 'y' or 'n'"));
+ 		}
+-	      state = 0;
+-	    } else
++	      /* fall through */
++	    }
++	  else
+ 	    break;
+ 	  
+ 	case 0:
+--
+cgit v0.9.0.3
