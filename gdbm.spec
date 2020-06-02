@@ -81,6 +81,12 @@ for gdbm, the GNU database system.
 	--enable-libgdbm-compat \
 	--enable-largefile
 
+# get rid of rpath (as per https://fedoraproject.org/wiki/Packaging:Guidelines#Beware_of_Rpath)	
+# currently --disable-rpath doesn't work for gdbm_dump|load, gdbmtool and libgdbm_compat.so.4	
+# https://puszcza.gnu.org.ua/bugs/index.php?359	
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool	
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
+
 %make_build
 
 %install
