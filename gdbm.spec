@@ -1,3 +1,9 @@
+# gdbm is used by avahi, avahi is used by pulseaudio,
+# pulseaudio is used by wine
+%ifarch %{x86_64}
+%bcond_without compat32
+%endif
+
 %define major 6
 %define compatmajor 4
 %define libname %mklibname gdbm %{major}
@@ -5,6 +11,9 @@
 %define devname %mklibname gdbm -d
 %define previouslibname %mklibname gdbm 5
 %define prepreviouslibname %mklibname gdbm 4
+%define lib32name %mklib32name gdbm %{major}
+%define lib32compat %mklib32name gdbm_compat %{compatmajor}
+%define dev32name %mklib32name gdbm -d
 
 # (tpg) optimize it a bit
 %global optflags %optflags -O3 -Wno-return-type
@@ -12,7 +21,7 @@
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.18.1
-Release:	5
+Release:	6
 License:	GPLv2
 Group:		System/Libraries
 Url:		http://www.gnu.org/software/gdbm/
@@ -72,25 +81,77 @@ Provides:	%{name}-devel = %{version}-%{release}
 This package contains the development libraries and header files
 for gdbm, the GNU database system.
 
+%if %{with compat32}
+%package -n %{lib32name}
+Summary:	Main library for gdbm (32-bit)
+Group:		System/Libraries
+
+%description -n %{lib32name}
+This package provides library needed to run programs dynamically linked
+with gdbm.
+
+%package -n %{lib32compat}
+Summary:	Main library for gdbm (32-bit)
+Group:		System/Libraries
+
+%description -n %{lib32compat}
+This package provides library needed to run programs dynamically linked
+with gdbm.
+
+%package -n %{dev32name}
+Summary:	Development libraries and header files for the gdbm library (32-bit)
+Group:		Development/Databases
+Requires:	%{devname} = %{version}-%{release}
+Requires:	%{lib32name} = %{version}-%{release}
+Requires:	%{lib32compat} = %{version}-%{release}
+
+%description -n %{dev32name}
+This package contains the development libraries and header files
+for gdbm, the GNU database system.
+%endif
+
 %prep
 %autosetup -p1
 
-%build
-%configure \
-	--disable-static \
+export CONFIGURE_TOP="$(pwd)"
+
+%if %{with compat32}
+mkdir build32
+cd build32
+%configure32 \
 	--enable-libgdbm-compat \
 	--enable-largefile
+sed -i -e 's,^bin_PROGRAMS.*,bin_PROGRAMS =,g' src/Makefile
+cd ..
+%endif
+
+mkdir build
+cd build
+%configure \
+	--enable-libgdbm-compat \
+	--enable-largefile
+
+%build
 
 # get rid of rpath (as per https://fedoraproject.org/wiki/Packaging:Guidelines#Beware_of_Rpath)	
 # currently --disable-rpath doesn't work for gdbm_dump|load, gdbmtool and libgdbm_compat.so.4	
 # https://puszcza.gnu.org.ua/bugs/index.php?359	
-sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool	
-sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' build*/libtool	
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' build*/libtool
 
-%make_build
+%if %{with compat32}
+%make_build -C build32
+%endif
+
+%make_build -C build
 
 %install
-%make_install
+%if %{with compat32}
+%make_install -C build32
+ln -s libgdbm.so.%{major} %{buildroot}%{_prefix}/lib/libgdbm.so.4
+ln -s libgdbm.so.%{major} %{buildroot}%{_prefix}/lib/libgdbm.so.5
+%endif
+%make_install -C build
 %find_lang %{name}
 
 # create symlinks for compatibility
@@ -122,3 +183,16 @@ ln -s libgdbm.so.%{major} %{buildroot}%{_libdir}/libgdbm.so.5
 %{_infodir}/gdbm*
 %{_mandir}/man3/*
 %{_mandir}/man1/*
+
+%if %{with compat32}
+%files -n %{lib32name}
+%{_prefix}/lib/libgdbm.so.%{major}*
+%{_prefix}/lib/libgdbm.so.4
+%{_prefix}/lib/libgdbm.so.5
+
+%files -n %{lib32compat}
+%{_prefix}/lib/libgdbm_compat.so.%{compatmajor}*
+
+%files -n %{dev32name}
+%{_prefix}/lib/libgdbm*.so
+%endif
