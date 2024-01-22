@@ -21,14 +21,17 @@
 Summary:	A GNU set of database routines which use extensible hashing
 Name:		gdbm
 Version:	1.23
-Release:	2
+Release:	3
 License:	GPLv2
 Group:		System/Libraries
 Url:		http://www.gnu.org/software/gdbm/
 Source0:	ftp://ftp.gnu.org/pub/gnu/gdbm/%{name}-%{version}.tar.gz
-BuildRequires:	libtool
+BuildRequires:	slibtool
+BuildRequires:	autoconf
+BuildRequires:	automake
 BuildRequires:	flex
 BuildRequires:	bison
+BuildRequires:	make
 
 %description
 Gdbm is a GNU database indexing library, including routines
@@ -115,6 +118,8 @@ for gdbm, the GNU database system.
 
 export CONFIGURE_TOP="$(pwd)"
 
+cp -f %{_datadir}/automake-*/config.sub build-aux/
+
 %if %{with compat32}
 mkdir build32
 cd build32
@@ -140,18 +145,18 @@ sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' build*/l
 sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' build*/libtool
 
 %if %{with compat32}
-%make_build -C build32
+%make_build -C build32 LIBTOOL=slibtool-shared
 %endif
 
-%make_build -C build
+%make_build -C build LIBTOOL=slibtool-shared
 
 %install
 %if %{with compat32}
-%make_install -C build32
+%make_install -C build32 LIBTOOL=slibtool-shared
 ln -s libgdbm.so.%{major} %{buildroot}%{_prefix}/lib/libgdbm.so.4
 ln -s libgdbm.so.%{major} %{buildroot}%{_prefix}/lib/libgdbm.so.5
 %endif
-%make_install -C build
+%make_install -C build LIBTOOL=slibtool-shared
 %find_lang %{name}
 
 # create symlinks for compatibility
