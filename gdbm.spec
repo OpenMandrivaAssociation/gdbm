@@ -24,7 +24,7 @@ Version:	1.24
 Release:	1
 License:	GPLv2
 Group:		System/Libraries
-Url:		http://www.gnu.org/software/gdbm/
+Url:		https://www.gnu.org/software/gdbm/
 Source0:	ftp://ftp.gnu.org/pub/gnu/gdbm/%{name}-%{version}.tar.gz
 BuildRequires:	slibtool
 BuildRequires:	autoconf
