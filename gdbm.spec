@@ -26,6 +26,7 @@ License:	GPLv2
 Group:		System/Libraries
 Url:		https://www.gnu.org/software/gdbm/
 Source0:	ftp://ftp.gnu.org/pub/gnu/gdbm/%{name}-%{version}.tar.gz
+BuildRequires:	libtool-base
 BuildRequires:	slibtool
 BuildRequires:	autoconf
 BuildRequires:	automake
